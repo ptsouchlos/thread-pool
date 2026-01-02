@@ -22,7 +22,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install doxygen
+          brew install --cask doxygen
           pip3 install jinja2 Pygments
 
       - name: Build
