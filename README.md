@@ -2,19 +2,21 @@
 thread-pool
 </h1>
 
-[![say thanks](https://img.shields.io/badge/Say%20Thanks-👍-1EAEDB.svg)](https://github.com/DeveloperPaul123/thread-pool/stargazers)
+[![say thanks](https://img.shields.io/badge/Say%20Thanks-👍-1EAEDB.svg)](https://github.com/ptsouchlos/thread-pool/stargazers)
 [![Discord](https://img.shields.io/discord/652515194572111872?logo=Discord)](https://discord.gg/CX2ybByRnt)
-![License](https://img.shields.io/github/license/DeveloperPaul123/thread-pool?color=blue)
-![Release](https://img.shields.io/github/v/release/DeveloperPaul123/thread-pool)
-![Documentation](https://img.shields.io/website?label=docs&url=https%3A%2F%2Fdeveloperpaul123.github.io%2Fthread-pool%2F)
+![License](https://img.shields.io/github/license/ptsouchlos/thread-pool?color=blue)
+![Release](https://img.shields.io/github/v/release/ptsouchlos/thread-pool)
+![Documentation](https://img.shields.io/website?label=docs&url=https%3A%2F%2Fptsouchlos.github.io%2Fthread-pool%2F)
 
-[![Ubuntu](https://github.com/DeveloperPaul123/thread-pool/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/DeveloperPaul123/thread-pool/actions/workflows/ubuntu.yml)
-[![Windows](https://github.com/DeveloperPaul123/thread-pool/actions/workflows/windows.yml/badge.svg)](https://github.com/DeveloperPaul123/thread-pool/actions/workflows/windows.yml)
-[![Style](https://github.com/DeveloperPaul123/thread-pool/actions/workflows/style.yml/badge.svg)](https://github.com/DeveloperPaul123/thread-pool/actions/workflows/style.yml)
-[![Install](https://github.com/DeveloperPaul123/thread-pool/actions/workflows/install.yml/badge.svg)](https://github.com/DeveloperPaul123/thread-pool/actions/workflows/install.yml)
-[![codecov](https://codecov.io/github/DeveloperPaul123/thread-pool/branch/feature/codecov/graph/badge.svg?token=Y47HDBRVR3)](https://codecov.io/github/DeveloperPaul123/thread-pool)
+[![Ubuntu](https://github.com/ptsouchlos/thread-pool/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/ptsouchlos/thread-pool/actions/workflows/ubuntu.yml)
+[![Windows](https://github.com/ptsouchlos/thread-pool/actions/workflows/windows.yml/badge.svg)](https://github.com/ptsouchlos/thread-pool/actions/workflows/windows.yml)
+[![Style](https://github.com/ptsouchlos/thread-pool/actions/workflows/style.yml/badge.svg)](https://github.com/ptsouchlos/thread-pool/actions/workflows/style.yml)
+[![Install](https://github.com/ptsouchlos/thread-pool/actions/workflows/install.yml/badge.svg)](https://github.com/ptsouchlos/thread-pool/actions/workflows/install.yml)
+[![codecov](https://codecov.io/github/ptsouchlos/thread-pool/branch/feature/codecov/graph/badge.svg?token=Y47HDBRVR3)](https://codecov.io/github/ptsouchlos/thread-pool)
 
 A simple, *fast* and functional thread pool implementation using pure C++20.
+
+> **Note:** The GitHub account for this project was renamed from `DeveloperPaul123` to `ptsouchlos`. Repository ownership and history are unchanged.
 
 ## Features
 
@@ -49,7 +51,7 @@ Alternatively, you can use something like [CPM](https://github.com/TheLartians/C
 ```cmake
 CPMAddPackage(
   NAME thread-pool
-  GITHUB_REPOSITORY DeveloperPaul123/thread-pool
+  GITHUB_REPOSITORY ptsouchlos/thread-pool
   GIT_TAG 0.6.0 # change this to latest commit or release tag
   OPTIONS
     "TP_BUILD_TESTS OFF"
@@ -188,7 +190,7 @@ See [Format.cmake](https://github.com/TheLartians/Format.cmake) for details.
 
 ### Build the documentation
 
-The documentation is automatically built and [published](https://developerpaul123.github.io/thread-pool) whenever a [GitHub Release](https://help.github.com/en/github/administering-a-repository/managing-releases-in-a-repository) is created.
+The documentation is automatically built and [published](https://ptsouchlos.github.io/thread-pool) whenever a [GitHub Release](https://help.github.com/en/github/administering-a-repository/managing-releases-in-a-repository) is created.
 To manually build documentation, call the following command.
 
 ```bash
@@ -210,5 +212,5 @@ The project is licensed under the MIT license. See [LICENSE](LICENSE) for more d
 
 ## Author
 
-| [<img src="https://avatars0.githubusercontent.com/u/6591180?s=460&v=4" width="100"><br><sub>@DeveloperPaul123</sub>](https://github.com/DeveloperPaul123) |
+| [<img src="https://avatars0.githubusercontent.com/u/6591180?s=460&v=4" width="100"><br><sub>@ptsouchlos</sub>](https://github.com/ptsouchlos) |
 |:----:|

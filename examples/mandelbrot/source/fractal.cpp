@@ -22,7 +22,7 @@ void save_ppm(const unsigned int& width, const unsigned int& height, std::span<r
     std::ofstream output_ppm(file_name.data(), std::ios::binary);
     // output header
     output_ppm << "P6 " << new_line;
-    output_ppm << "# created by DeveloperPaul123/thread-pool mandelbrot sample.\n";
+    output_ppm << "# created by ptsouchlos/thread-pool mandelbrot sample.\n";
     output_ppm << width << " " << height << " " << 255 << new_line;
 
     output_ppm.write(reinterpret_cast<char*>(colors.data()), width * height * 3);
