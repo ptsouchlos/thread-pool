@@ -16,6 +16,8 @@ thread-pool
 
 A simple, *fast* and functional thread pool implementation using pure C++20.
 
+> **Note:** The GitHub account for this project was renamed from `DeveloperPaul123` to `ptsouchlos`. Repository ownership and history are unchanged.
+
 ## Features
 
 * Built entirely with C++20
