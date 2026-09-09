@@ -70,9 +70,9 @@ namespace dp {
                                     // the above task can push more work onto the pool, so we
                                     // only decrement the in flights once the task has been
                                     // executed because now it's now longer "in flight". Wake
-                                    // wait_for_tasks() only on the transition to zero: checking
-                                    // in_flight_tasks_ separately from this decrement (as a prior
-                                    // version did) races with enqueue_task()'s own read-then-set
+                                    // wait_for_tasks() only on the transition to zero. Checking
+                                    // in_flight_tasks_ separately from this decrement
+                                    // races with enqueue_task()'s own read-then-set
                                     // of the same counter.
                                     if (in_flight_tasks_.fetch_sub(1, std::memory_order_acq_rel) ==
                                         1) {
@@ -243,9 +243,9 @@ namespace dp {
         void wait_for_tasks() {
             auto current = in_flight_tasks_.load(std::memory_order_acquire);
             while (current > 0) {
-                // wait() blocks only while the value still equals `current`; a worker's
+                // wait() blocks only while the value still equals `current`. A worker's
                 // fetch_sub() notifies exactly when the count transitions to zero (see the
-                // worker loop above), so there is no separate flag to fall out of sync with
+                // worker loop), so there is no separate flag to fall out of sync with
                 // in_flight_tasks_ itself.
                 in_flight_tasks_.wait(current, std::memory_order_acquire);
                 current = in_flight_tasks_.load(std::memory_order_acquire);
@@ -293,10 +293,8 @@ namespace dp {
         struct task_item {
             dp::thread_safe_queue<FunctionType> tasks{};
             // A worker acquires this once per wake-up and then drains its entire queue, so
-            // enqueue_task() can release it many times before a matching acquire. It must
-            // therefore be a counting semaphore: releasing a binary_semaphore past its max()
-            // of 1 is a precondition violation (undefined behavior), and aborts under
-            // libstdc++ assertions, which are enabled automatically in unoptimized builds.
+            // enqueue_task() can release it many times before a matching acquire. This
+            // necessitates a counting semaphore, otherwise we could get UB.
             std::counting_semaphore<> signal{0};
             static_assert(decltype(signal)::max() > 1,
                           "task_item::signal must be a counting semaphore; enqueue_task() "
