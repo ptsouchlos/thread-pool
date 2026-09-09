@@ -2,12 +2,8 @@ cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
 project(Mandelbrot LANGUAGES CXX)
 
-# --- Import tools ----
-
+# Import tools and dependencies
 include(../../cmake/tools.cmake)
-
-# ---- Dependencies ----
-
 include(../../cmake/CPM.cmake)
 
 CPMAddPackage(
@@ -16,7 +12,7 @@ CPMAddPackage(
     OPTIONS "CXXOPTS_BUILD_EXAMPLES NO" "CXXOPTS_BUILD_TESTS NO" "CXXOPTS_ENABLE_INSTALL YES"
 )
 
-# ---- Create standalone executable ----
+# Create standalone executable
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
 file(GLOB headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
