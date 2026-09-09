@@ -9,7 +9,7 @@ option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 include(../cmake/tools.cmake)
 include(../cmake/CPM.cmake)
 
-CPMAddPackage("gh:doctest/doctest@2.4.12")
+CPMAddPackage("gh:doctest/doctest@2.5.3")
 CPMAddPackage(
   NAME Format.cmake
   VERSION 1.8.3
