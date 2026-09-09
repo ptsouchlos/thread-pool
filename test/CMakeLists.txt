@@ -2,18 +2,14 @@ cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
 project(thread-pool-tests LANGUAGES CXX)
 
-# ---- Options ----
+# Options
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
-# --- Import tools ----
-
+# Dependencies and tools
 include(../cmake/tools.cmake)
-
-# ---- Dependencies ----
-
 include(../cmake/CPM.cmake)
 
-CPMAddPackage("gh:doctest/doctest@2.4.12")
+CPMAddPackage("gh:doctest/doctest@2.5.3")
 CPMAddPackage(
   NAME Format.cmake
   VERSION 1.8.3
@@ -31,8 +27,7 @@ if(TEST_INSTALLED_VERSION)
     find_package(thread-pool REQUIRED)
 endif()
 
-# ---- Create binary ----
-
+# Create test binary
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
 add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} doctest::doctest dp::thread-pool)
@@ -60,7 +55,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC" AND "${CMAKE_BUILD_TYPE}" MATCH
     )
 endif()
 
-# enable compiler warnings
+# Enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)
     target_compile_options(
         ${PROJECT_NAME} PRIVATE $<$<COMPILE_LANG_AND_ID:CXX,Clang,GNU>:-Wall -Wpedantic -Wextra
@@ -72,6 +67,5 @@ if(NOT TEST_INSTALLED_VERSION)
     )
 endif()
 
-# Note: doctest and similar testing frameworks can automatically configure CMake tests. For other
 include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 doctest_discover_tests(${PROJECT_NAME})

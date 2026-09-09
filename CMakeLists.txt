@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
-# ---- Project ----
-
-# Note: update this to your new project's name and version
 project(
     thread-pool
     VERSION 0.7.0
@@ -61,7 +58,7 @@ file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include
 
 find_package(Threads REQUIRED)
 
-# ---- Create library ----
+# Create library
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(dp::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
@@ -73,10 +70,10 @@ else()
     target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 endif()
 
-# being a cross-platform target, we enforce standards conformance on MSVC
+# Being a cross-platform target, we enforce standards conformance on MSVC
 target_compile_options(${PROJECT_NAME} INTERFACE $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->)
 
-# the location where the project's version header will be placed should match the project's regular
+# The location where the project's version header will be placed should match the project's regular
 # header paths here we get the root folder of the include directory but getting the directory name
 # from one of the headers paths
 list(GET headers 0 first_header)
@@ -95,8 +92,8 @@ target_include_directories(
               $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
 )
 
-# ---- Create an installable target ----
-# this allows users to install and find the library via `find_package()`.
+# Create an installable target.
+# This allows users to install and find the library via `find_package()`.
 
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)

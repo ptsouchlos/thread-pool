@@ -2,10 +2,8 @@ cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
 project(thread-pool-benchmarks LANGUAGES CXX)
 
-# --- Import tools ----
+# Import tools and dependencies.
 include(../cmake/tools.cmake)
-
-# ---- Dependencies ----
 include(../cmake/CPM.cmake)
 
 CPMAddPackage(
@@ -43,7 +41,7 @@ CPMAddPackage(
         GIT_SHALLOW
 )
 
-# ---- Create binary ----
+# Create binary
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
 file(GLOB headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
 
@@ -52,7 +50,7 @@ target_link_libraries(${PROJECT_NAME} nanobench doctest::doctest bshoshany Rifte
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# enable compiler warnings
+# Enable compiler warnings
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Wpedantic -Wextra)
 elseif(MSVC)
