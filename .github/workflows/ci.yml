@@ -30,12 +30,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ptsouchlos/infra/.github/actions/setup-cpp@feat/setup-cpp-windows-clang
+      - uses: ptsouchlos/infra/.github/actions/setup-cpp@v1
         with:
           compiler: ${{ matrix.compiler }}
           version: ${{ matrix.version }}
 
-      - uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+      - uses: ptsouchlos/infra/.github/actions/cmake-build@v1
         with:
           build-type: Debug
           configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_BENCHMARKS=OFF -DTP_THREAD_SANITIZER=OFF
@@ -51,12 +51,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ptsouchlos/infra/.github/actions/setup-cpp@feat/setup-cpp-windows-clang
+      - uses: ptsouchlos/infra/.github/actions/setup-cpp@v1
         with:
           compiler: gcc
           version: "16"
 
-      - uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+      - uses: ptsouchlos/infra/.github/actions/cmake-build@v1
         with:
           build-type: Debug
           configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_BENCHMARKS=OFF -DCMAKE_CXX_FLAGS=-D_GLIBCXX_ASSERTIONS
@@ -69,11 +69,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ptsouchlos/infra/.github/actions/setup-cpp@feat/setup-cpp-windows-clang
+      - uses: ptsouchlos/infra/.github/actions/setup-cpp@v1
         with:
           compiler: gcc
 
-      - uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+      - uses: ptsouchlos/infra/.github/actions/cmake-build@v1
         with:
           build-type: RelWithDebInfo
           configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_BENCHMARKS=OFF -DTP_THREAD_SANITIZER=ON
@@ -84,13 +84,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ptsouchlos/infra/.github/actions/setup-cpp@feat/setup-cpp-windows-clang
+      - uses: ptsouchlos/infra/.github/actions/setup-cpp@v1
         with:
           compiler: gcc
           version: "13"
 
       - name: Build and install the library
-        uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+        uses: ptsouchlos/infra/.github/actions/cmake-build@v1
         with:
           build-type: Release
           configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_TESTS=ON -DTP_BUILD_BENCHMARKS=OFF
@@ -98,7 +98,7 @@ jobs:
           cpm-cache: "true"
 
       - name: Build the tests against the installed library
-        uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+        uses: ptsouchlos/infra/.github/actions/cmake-build@v1
         with:
           source-dir: test
           build-dir: build-installed
