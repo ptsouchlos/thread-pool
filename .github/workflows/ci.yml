@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
+jobs:
+  build:
+    name: ${{ matrix.platform }}${{ matrix.version && format('-{0}', matrix.version) || '' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: linux-gcc, os: ubuntu-24.04, compiler: gcc, version: "13" }
+          - { platform: linux-gcc, os: ubuntu-24.04, compiler: gcc, version: "14" }
+          - { platform: linux-clang, os: ubuntu-24.04, compiler: clang, version: "18" }
+          - { platform: linux-clang, os: ubuntu-24.04, compiler: clang, version: "19" }
+          - { platform: linux-clang, os: ubuntu-24.04, compiler: clang, version: "20" }
+          - { platform: macos-appleclang, os: macos-latest, compiler: appleclang }
+          - { platform: windows-msvc, os: windows-latest, compiler: msvc }
+          - { platform: windows-clang, os: windows-latest, compiler: clang }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ptsouchlos/infra/.github/actions/setup-cpp@feat/setup-cpp-windows-clang
+        with:
+          compiler: ${{ matrix.compiler }}
+          version: ${{ matrix.version }}
+
+      - uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+        with:
+          build-type: Debug
+          configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_BENCHMARKS=OFF -DTP_THREAD_SANITIZER=OFF
+          cpm-cache: "true"
+
+  # GCC 16 is currently the only toolchain whose libstdc++ asserts counting_semaphore's
+  # release() precondition, so this is the job that catches a regression of the
+  # binary_semaphore over-release at runtime. libstdc++ turns _GLIBCXX_ASSERTIONS on
+  # automatically for unoptimized builds, which is why this is a Debug build.
+  gcc-assertions:
+    name: "gcc-16 Debug + libstdc++ assertions"
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ptsouchlos/infra/.github/actions/setup-cpp@feat/setup-cpp-windows-clang
+        with:
+          compiler: gcc
+          version: "16"
+
+      - uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+        with:
+          build-type: Debug
+          configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_BENCHMARKS=OFF -DCMAKE_CXX_FLAGS=-D_GLIBCXX_ASSERTIONS
+          cpm-cache: "true"
+
+  # A thread pool with no sanitizer coverage in CI is how the semaphore bug survived to release.
+  tsan:
+    name: "ThreadSanitizer"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ptsouchlos/infra/.github/actions/setup-cpp@feat/setup-cpp-windows-clang
+        with:
+          compiler: gcc
+
+      - uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+        with:
+          build-type: RelWithDebInfo
+          configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_BENCHMARKS=OFF -DTP_THREAD_SANITIZER=ON
+          cpm-cache: "true"
+
+  install:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ptsouchlos/infra/.github/actions/setup-cpp@feat/setup-cpp-windows-clang
+        with:
+          compiler: gcc
+          version: "13"
+
+      - name: Build and install the library
+        uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+        with:
+          build-type: Release
+          configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_TESTS=ON -DTP_BUILD_BENCHMARKS=OFF
+          install-prefix: ${{ github.workspace }}/prefix
+          cpm-cache: "true"
+
+      - name: Build the tests against the installed library
+        uses: ptsouchlos/infra/.github/actions/cmake-build@feat/setup-cpp-windows-clang
+        with:
+          source-dir: test
+          build-dir: build-installed
+          build-type: Debug
+          configure-args: -DTEST_INSTALLED_VERSION=1 -DCMAKE_PREFIX_PATH=${{ github.workspace }}/prefix
+          cpm-cache: "true"
