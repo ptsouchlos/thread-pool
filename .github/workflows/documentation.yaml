@@ -13,7 +13,7 @@ jobs:
     name: Build and publish documentation
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4.4.0
+      - uses: actions/checkout@v7.0.1
 
       - uses: actions/cache@v4.3.0
         with:
