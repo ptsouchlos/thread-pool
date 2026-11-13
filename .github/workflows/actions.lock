@@ -7,22 +7,22 @@ workflows:
         - 'actions/checkout@v4.4.0'
         - 'ptsouchlos/infra@v1.8.0'
     '.github/workflows/documentation.yaml':
-        - 'actions/cache@v4.3.0'
+        - 'actions/cache@v6.1.0'
         - 'actions/checkout@v4.4.0'
         - 'peaceiris/actions-gh-pages@v3.9.3'
     '.github/workflows/style.yml':
-        - 'actions/cache@v4.3.0'
+        - 'actions/cache@v6.1.0'
         - 'actions/checkout@v4.4.0'
     '.github/workflows/verify-lockfile.yml':
         - 'actions/checkout@v7.0.1'
 dependencies:
-    'actions/cache@v4.3.0':
-        ref: 'v4.3.0'
-        commit: 'sha1-0057852bfaa89a56745cba8c7296529d2fc39830'
-        owner_id: 44036562
-        repo_id: 215566462
     'actions/cache@v6':
         ref: 'v6'
+        commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
+        owner_id: 44036562
+        repo_id: 215566462
+    'actions/cache@v6.1.0':
+        ref: 'v6.1.0'
         commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         owner_id: 44036562
         repo_id: 215566462
