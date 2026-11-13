@@ -9,7 +9,7 @@ workflows:
     '.github/workflows/documentation.yaml':
         - 'actions/cache@v4.3.0'
         - 'actions/checkout@v4.4.0'
-        - 'peaceiris/actions-gh-pages@v3.9.3'
+        - 'peaceiris/actions-gh-pages@v4.1.0'
     '.github/workflows/style.yml':
         - 'actions/cache@v4.3.0'
         - 'actions/checkout@v4.4.0'
@@ -46,9 +46,9 @@ dependencies:
         commit: 'sha1-0b201ec74fa43914dc39ae48a89fd1d8cb592756'
         owner_id: 1256587
         repo_id: 212181767
-    'peaceiris/actions-gh-pages@v3.9.3':
-        ref: 'v3.9.3'
-        commit: 'sha1-373f7f263a76c20808c831209c920827a82a2847'
+    'peaceiris/actions-gh-pages@v4.1.0':
+        ref: 'v4.1.0'
+        commit: 'sha1-84c30a85c19949d7eee79c4ff27748b70285e453'
         owner_id: 30958501
         repo_id: 187915200
     'ptsouchlos/infra@v1.8.0':
