@@ -28,7 +28,7 @@ jobs:
     name: "gcc-16 Debug + libstdc++ assertions"
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4.4.0
+      - uses: actions/checkout@v7.0.1
 
       - uses: ptsouchlos/infra/.github/actions/setup-cpp@v1.8.0
         with:
@@ -46,7 +46,7 @@ jobs:
     name: "ThreadSanitizer"
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4.4.0
+      - uses: actions/checkout@v7.0.1
 
       - uses: ptsouchlos/infra/.github/actions/setup-cpp@v1.8.0
         with:
@@ -61,7 +61,7 @@ jobs:
   install:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4.4.0
+      - uses: actions/checkout@v7.0.1
 
       - uses: ptsouchlos/infra/.github/actions/setup-cpp@v1.8.0
         with:
