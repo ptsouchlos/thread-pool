@@ -5,7 +5,7 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/ci.yml':
         - 'actions/checkout@v4.4.0'
-        - 'ptsouchlos/infra@v1.8.0'
+        - 'ptsouchlos/infra@v1.10.0'
     '.github/workflows/documentation.yaml':
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v4.4.0'
@@ -16,11 +16,6 @@ workflows:
     '.github/workflows/verify-lockfile.yml':
         - 'actions/checkout@v7.0.1'
 dependencies:
-    'actions/cache@v6':
-        ref: 'v6'
-        commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
-        owner_id: 44036562
-        repo_id: 215566462
     'actions/cache@v6.1.0':
         ref: 'v6.1.0'
         commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
@@ -36,13 +31,13 @@ dependencies:
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
-    'hendrikmuhs/ccache-action@v1.2':
-        ref: 'v1.2'
-        commit: 'sha1-5ebbd400eff9e74630f759d94ddd7b6c26299639'
+    'hendrikmuhs/ccache-action@v1.2.25':
+        ref: 'v1.2.25'
+        commit: 'sha1-dbeefd73e8e2ffc1bbc412570072735eb4db3607'
         owner_id: 7126422
         repo_id: 319035161
-    'ilammy/msvc-dev-cmd@v1':
-        ref: 'v1'
+    'ilammy/msvc-dev-cmd@v1.13.0':
+        ref: 'v1.13.0'
         commit: 'sha1-0b201ec74fa43914dc39ae48a89fd1d8cb592756'
         owner_id: 1256587
         repo_id: 212181767
@@ -51,12 +46,12 @@ dependencies:
         commit: 'sha1-373f7f263a76c20808c831209c920827a82a2847'
         owner_id: 30958501
         repo_id: 187915200
-    'ptsouchlos/infra@v1.8.0':
-        ref: 'v1.8.0'
-        commit: 'sha1-5d7323ded6e542c428b3a575085f99150df41bb8'
+    'ptsouchlos/infra@v1.10.0':
+        ref: 'v1.10.0'
+        commit: 'sha1-3a9101079fe67a0bfe77c220f3ffbe20c55a7d96'
         owner_id: 6591180
         repo_id: 1270714317
         uses:
-            - 'actions/cache@v6'
-            - 'hendrikmuhs/ccache-action@v1.2'
-            - 'ilammy/msvc-dev-cmd@v1'
+            - 'actions/cache@v6.1.0'
+            - 'hendrikmuhs/ccache-action@v1.2.25'
+            - 'ilammy/msvc-dev-cmd@v1.13.0'
