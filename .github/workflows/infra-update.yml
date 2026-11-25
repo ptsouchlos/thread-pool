@@ -1,0 +1,17 @@
+name: Update infra
+
+on:
+  repository_dispatch:
+    types: [infra-release]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+concurrency: infra-update
+
+jobs:
+  update:
+    uses: ptsouchlos/infra/.github/workflows/update-infra.yml@v1
+    secrets: inherit
+    with:
+      tag: ${{ github.event.client_payload.tag }}
