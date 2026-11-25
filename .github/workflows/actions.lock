@@ -10,6 +10,7 @@ workflows:
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v4.4.0'
         - 'peaceiris/actions-gh-pages@v3.9.3'
+    '.github/workflows/infra-update.yml': []
     '.github/workflows/style.yml':
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v4.4.0'
