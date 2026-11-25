@@ -1,16 +1,19 @@
 #pragma once
 
 #include <atomic>
+#include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <deque>
 #include <functional>
 #include <future>
+#include <mutex>
 #include <semaphore>
 #include <stdexcept>
 #include <thread>
 #include <tuple>  // std::ignore
 #include <type_traits>
+#include <unordered_map>
 
 #ifdef __has_include
 #    if __has_include(<version>)
@@ -19,6 +22,7 @@
 #endif
 
 #include "thread_safe_queue.h"
+#include "work_stealing_deque.h"
 
 namespace dp {
     namespace details {
@@ -50,12 +54,16 @@ namespace dp {
             if (number_of_threads == 0) {
                 throw std::invalid_argument("dp::thread_pool requires at least one thread");
             }
+            producer_id_ = std::this_thread::get_id();
             std::size_t current_id = 0;
             for (std::size_t i = 0; i < number_of_threads; ++i) {
                 priority_queue_.push_back(size_t(current_id));
                 try {
                     threads_.emplace_back([&, id = current_id,
                                            init](const std::stop_token& stop_tok) {
+                        tasks_[id].thread_id = std::this_thread::get_id();
+                        add_thread_id_to_map(tasks_[id].thread_id, id);
+
                         // invoke the init function on the thread
                         try {
                             std::invoke(init, id);
@@ -68,8 +76,10 @@ namespace dp {
                             tasks_[id].signal.acquire();
 
                             do {
-                                // invoke the task
-                                while (auto task = tasks_[id].tasks.pop_front()) {
+                                // execute work from the global queue
+                                // all threads can pull from the top, but the producer thread owns
+                                // the bottom
+                                while (auto task = global_tasks_.pop_top()) {
                                     // decrement the unassigned tasks as the task is now going
                                     // to be executed
                                     unassigned_tasks_.fetch_sub(1, std::memory_order_release);
@@ -82,16 +92,33 @@ namespace dp {
                                     // in_flight_tasks_ separately from this decrement
                                     // races with enqueue_task()'s own read-then-set
                                     // of the same counter.
-                                    if (in_flight_tasks_.fetch_sub(1, std::memory_order_acq_rel) ==
-                                        1) {
+                                    if (in_flight_tasks_.fetch_sub(
+                                            1, std::memory_order_acq_rel) == 1) {
                                         in_flight_tasks_.notify_all();
                                     }
                                 }
 
-                                // try to steal a task
+                                // invoke any tasks from the queue that this thread owns
+                                while (auto task = tasks_[id].tasks.pop_top()) {
+                                    // decrement the unassigned tasks as the task is now going
+                                    // to be executed
+                                    unassigned_tasks_.fetch_sub(1, std::memory_order_release);
+                                    // invoke the task
+                                    std::invoke(std::move(task.value()));
+                                    // the above task can push more work onto the pool, so we
+                                    // only decrement the in flights once the task has been
+                                    // executed because now it's now longer "in flight". Wake
+                                    // wait_for_tasks() only on the transition to zero.
+                                    if (in_flight_tasks_.fetch_sub(
+                                            1, std::memory_order_acq_rel) == 1) {
+                                        in_flight_tasks_.notify_all();
+                                    }
+                                }
+
+                                // try to steal a task from other threads
                                 for (std::size_t j = 1; j < tasks_.size(); ++j) {
                                     const std::size_t index = (id + j) % tasks_.size();
-                                    if (auto task = tasks_[index].tasks.steal()) {
+                                    if (auto task = tasks_[index].tasks.pop_top()) {
                                         // steal a task
                                         unassigned_tasks_.fetch_sub(1, std::memory_order_release);
                                         std::invoke(std::move(task.value()));
@@ -107,6 +134,8 @@ namespace dp {
                                 // front and waiting for more work
                             } while (unassigned_tasks_.load(std::memory_order_acquire) > 0);
 
+                            // the thread finished all its work, so we "notify" by putting this
+                            // thread in front in the priority queue
                             priority_queue_.rotate_to_front(id);
 
                         } while (!stop_tok.stop_requested());
@@ -189,7 +218,7 @@ namespace dp {
              * std::promise<ReturnType> promise;
              * auto future = promise.get_future();
              * auto task = [func = std::move(f), ...largs = std::move(args),
-                              promise = std::move(promise)]() mutable {...};
+                               promise = std::move(promise)]() mutable {...};
              */
             auto shared_promise = std::make_shared<std::promise<ReturnType>>();
             auto task = [func = std::move(f), ... largs = std::move(args),
@@ -232,7 +261,7 @@ namespace dp {
                     // suppress exceptions
                     try {
                         if constexpr (std::is_same_v<void,
-                                                     std::invoke_result_t<Function&&, Args&&...>>) {
+                                                    std::invoke_result_t<Function&&, Args&&...>>) {
                             std::invoke(f, largs...);
                         } else {
                             // the function returns an argument, but can be ignored
@@ -278,6 +307,7 @@ namespace dp {
             for (auto& task_list : tasks_) {
                 removed_task_count += task_list.tasks.clear();
             }
+            removed_task_count += global_tasks_.clear();
             in_flight_tasks_.fetch_sub(removed_task_count, std::memory_order_release);
             unassigned_tasks_.fetch_sub(removed_task_count, std::memory_order_release);
 
@@ -287,25 +317,60 @@ namespace dp {
       private:
         template <typename Function>
         void enqueue_task(Function&& f) {
-            auto i_opt = priority_queue_.copy_front_and_rotate_to_back();
-            if (!i_opt.has_value()) {
-                // would only be a problem if there are zero threads
-                return;
+            // are we enqueuing from the producer thread? Or is a worker thread enqueuing
+            // to the pool?
+            auto current_id = std::this_thread::get_id();
+            auto is_producer = current_id == producer_id_;
+            // assign the work
+            if (is_producer) {
+                // we push to the global task queue
+                global_tasks_.emplace(std::forward<Function>(f));
+            } else {
+                // This is a violation of the pre-condition.
+                // We cannot accept work from an arbitrary thread that is not the root producer or a
+                // worker in the pool
+                assert(thread_id_to_index_.contains(current_id));
+                // assign the task
+                tasks_[thread_id_to_index_.at(current_id)].tasks.emplace(
+                    std::forward<Function>(f));
             }
-            // get the index
-            auto i = *(i_opt);
+
+            /**
+             * Now we need to wake up a thread. Both producers and workers wake the next worker
+             * from the priority queue. A worker enqueuing a child task may itself be blocked
+             * waiting on that child's future, in which case it can never drain its own deque, so
+             * self-signaling would deadlock the pool; the woken worker drains the task from the
+             * enqueuer's deque via the steal loop instead. (If the woken index happens to be the
+             * enqueuer, the counting semaphore accumulates and is consumed at the enqueuer's
+             * next acquire, so that case degrades gracefully.)
+             */
+
+            // immediately invoked lambda
+            auto thread_wakeup_index = [&]() -> std::size_t {
+                auto i_opt = priority_queue_.copy_front_and_rotate_to_back();
+                if (!i_opt.has_value()) {
+                    // would only be a problem if there are zero threads
+                    return std::size_t{0};
+                }
+                // get the index
+                return *(i_opt);
+            }();
 
             // increment the unassigned tasks and in flight tasks
             unassigned_tasks_.fetch_add(1, std::memory_order_release);
             in_flight_tasks_.fetch_add(1, std::memory_order_release);
 
             // assign work
-            tasks_[i].tasks.push_back(std::forward<Function>(f));
-            tasks_[i].signal.release();
+            tasks_[thread_wakeup_index].signal.release();
+        }
+
+        void add_thread_id_to_map(std::thread::id thread_id, std::size_t index) {
+            std::lock_guard lock(thread_id_map_mutex_);
+            thread_id_to_index_.insert_or_assign(thread_id, index);
         }
 
         struct task_item {
-            dp::thread_safe_queue<FunctionType> tasks{};
+            dp::work_stealing_deque<FunctionType> tasks{};
             // A worker acquires this once per wake-up and then drains its entire queue, so
             // enqueue_task() can release it many times before a matching acquire. This
             // necessitates a counting semaphore, otherwise we could get UB.
@@ -313,6 +378,7 @@ namespace dp {
             static_assert(decltype(signal)::max() > 1,
                           "task_item::signal must be a counting semaphore; enqueue_task() "
                           "releases it once per task without a matching acquire.");
+            std::thread::id thread_id{};
         };
 
         std::vector<ThreadType> threads_;
@@ -320,6 +386,11 @@ namespace dp {
         dp::thread_safe_queue<std::size_t> priority_queue_;
         // guarantee these get zero-initialized
         std::atomic_int_fast64_t unassigned_tasks_{0}, in_flight_tasks_{0};
+
+        std::thread::id producer_id_;
+        dp::work_stealing_deque<FunctionType> global_tasks_{};
+        std::mutex thread_id_map_mutex_{};
+        std::unordered_map<std::thread::id, std::size_t> thread_id_to_index_{};
     };
 
     /**
