@@ -15,7 +15,17 @@ jobs:
   build:
     uses: ptsouchlos/infra/.github/workflows/cpp-build.yml@v1
     with:
-      targets: '[{"os":"ubuntu-24.04","compiler":"gcc","version":"13"},{"os":"ubuntu-24.04","compiler":"gcc","version":"14"},{"os":"ubuntu-24.04","compiler":"clang","version":"18"},{"os":"ubuntu-24.04","compiler":"clang","version":"19"},{"os":"ubuntu-24.04","compiler":"clang","version":"20"},{"os":"macos-latest","compiler":"appleclang"},{"os":"windows-latest","compiler":"msvc"},{"os":"windows-latest","compiler":"clang"}]'
+      targets: |
+        '[
+          {"os":"ubuntu-24.04","compiler":"gcc","version":"13"},
+          {"os":"ubuntu-24.04","compiler":"gcc","version":"14"},
+          {"os":"ubuntu-24.04","compiler":"clang","version":"18"},
+          {"os":"ubuntu-24.04","compiler":"clang","version":"19"},
+          {"os":"ubuntu-24.04","compiler":"clang","version":"20"},
+          {"os":"macos-latest","compiler":"appleclang"},
+          {"os":"windows-latest","compiler":"msvc"},
+          {"os":"windows-latest","compiler":"clang", version: "22.1.8"}
+        ]'
       build-type: Debug
       configure-args: -DTP_BUILD_EXAMPLES=OFF -DTP_BUILD_BENCHMARKS=OFF -DTP_THREAD_SANITIZER=OFF
       cpm-cache: true
