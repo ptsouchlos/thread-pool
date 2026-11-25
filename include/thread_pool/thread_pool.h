@@ -336,25 +336,24 @@ namespace dp {
             }
 
             /**
-             * Now we need to wake up the correct thread. If the thread that is enqueuing the task
-             * is a worker from the pool, then that thread needs to execute the work. Otherwise we
-             * need to use the priority queue to use the next available thread.
+             * Now we need to wake up a thread. Both producers and workers wake the next worker
+             * from the priority queue. A worker enqueuing a child task may itself be blocked
+             * waiting on that child's future, in which case it can never drain its own deque, so
+             * self-signaling would deadlock the pool; the woken worker drains the task from the
+             * enqueuer's deque via the steal loop instead. (If the woken index happens to be the
+             * enqueuer, the counting semaphore accumulates and is consumed at the enqueuer's
+             * next acquire, so that case degrades gracefully.)
              */
 
             // immediately invoked lambda
             auto thread_wakeup_index = [&]() -> std::size_t {
-                if (is_producer) {
-                    auto i_opt = priority_queue_.copy_front_and_rotate_to_back();
-                    if (!i_opt.has_value()) {
-                        // would only be a problem if there are zero threads
-                        return std::size_t{0};
-                    }
-                    // get the index
-                    return *(i_opt);
-                } else {
-                    // get the worker thread id index
-                    return thread_id_to_index_.at(current_id);
+                auto i_opt = priority_queue_.copy_front_and_rotate_to_back();
+                if (!i_opt.has_value()) {
+                    // would only be a problem if there are zero threads
+                    return std::size_t{0};
                 }
+                // get the index
+                return *(i_opt);
             }();
 
             // increment the unassigned tasks and in flight tasks
