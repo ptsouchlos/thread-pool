@@ -66,6 +66,7 @@ TEST_CASE("work_stealing_deque: steal std::function while pushing") {
     constexpr auto max = 64'000;
     auto expected_sum = 0;
     std::atomic_uint64_t pending_tasks{0};
+    std::atomic_bool supplier_done{false};
     std::deque<std::binary_semaphore> signals;
     signals.emplace_back(0);
     signals.emplace_back(0);
@@ -82,11 +83,16 @@ TEST_CASE("work_stealing_deque: steal std::function while pushing") {
                 for (auto& signal : signals) signal.release();
             }
         }
+        supplier_done.store(true, std::memory_order_release);
     };
 
     auto task = [&](int id) {
         signals[id].acquire();
-        while (pending_tasks.load(std::memory_order_acquire) > 0) {
+        // exit only when the supplier has finished AND nothing is pending: a bare
+        // pending_tasks == 0 can occur while the supplier is between push_bottom and
+        // fetch_add, so it is not a safe exit condition on its own
+        while (!(supplier_done.load(std::memory_order_acquire) &&
+                 pending_tasks.load(std::memory_order_acquire) == 0)) {
             auto value = deque.pop_top();
             if (value.has_value()) {
                 auto temp = std::move(value.value());
@@ -108,16 +114,23 @@ TEST_CASE("work_stealing_deque: steal std::function while pushing") {
 }
 
 class move_only {
-    int private_value_ = 2;
+    // a live object carries its value; an object that has been moved from carries the
+    // moved-from sentinel instead, so a live value can be told apart from a moved one
+    int private_value_ = 0;
+
+    static constexpr int moved_from = 2;
 
   public:
     move_only() = default;
     ~move_only() = default;
     move_only(move_only&) = delete;
-    move_only(move_only&& other) noexcept { private_value_ = std::move(other.private_value_); }
+    move_only(move_only&& other) noexcept : private_value_(other.private_value_) {
+        other.private_value_ = moved_from;
+    }
     move_only& operator=(move_only&) = delete;
     move_only& operator=(move_only&& other) noexcept {
-        private_value_ = std::move(other.private_value_);
+        private_value_ = other.private_value_;
+        other.private_value_ = moved_from;
         return *this;
     }
     [[nodiscard]] int secret() const { return private_value_; }
@@ -163,6 +176,7 @@ TEST_CASE("work_stealing_deque: steal std::move_only_function while pushing") {
     constexpr auto max = 64'000;
     auto expected_sum = 0;
     std::atomic_uint64_t pending_tasks{0};
+    std::atomic_bool supplier_done{false};
     std::deque<std::binary_semaphore> signals;
     signals.emplace_back(0);
     signals.emplace_back(0);
@@ -179,18 +193,21 @@ TEST_CASE("work_stealing_deque: steal std::move_only_function while pushing") {
                 for (auto& signal : signals) signal.release();
             }
         }
+        supplier_done.store(true, std::memory_order_release);
     };
 
     auto task = [&](int id) {
         signals[id].acquire();
-        while (pending_tasks.load(std::memory_order_acquire) > 0) {
+        // exit only when the supplier has finished AND nothing is pending: a bare
+        // pending_tasks == 0 can occur while the supplier is between push_bottom and
+        // fetch_add, so it is not a safe exit condition on its own
+        while (!(supplier_done.load(std::memory_order_acquire) &&
+                 pending_tasks.load(std::memory_order_acquire) == 0)) {
             auto value = deque.pop_top();
             if (value.has_value()) {
                 auto temp = std::move(value.value());
-                if (temp) {
-                    std::invoke(value.value());
-                    pending_tasks.fetch_sub(1, std::memory_order_release);
-                }
+                std::invoke(std::move(temp));
+                pending_tasks.fetch_sub(1, std::memory_order_release);
             }
         }
     };
